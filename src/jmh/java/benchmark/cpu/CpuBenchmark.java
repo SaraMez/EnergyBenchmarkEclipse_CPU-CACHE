@@ -1,39 +1,21 @@
 package benchmark.cpu;
 
-import org.eclipse.collections.api.bag.ImmutableBag;
-import org.eclipse.collections.api.bag.MutableBag;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.list.primitive.MutableIntList;
-import org.eclipse.collections.api.list.primitive.MutableLongList;
-import org.eclipse.collections.api.map.ImmutableMap;
-import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
-import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.bag.mutable.HashBag;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
-import org.eclipse.collections.impl.list.mutable.primitive.LongArrayList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
-import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
-import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
@@ -48,255 +30,28 @@ public class CpuBenchmark {
     @Param({"1000", "10000", "100000", "1000000"})
     public int size;
 
-    private FastList<Integer> fastList;
-    private ImmutableList<Integer> immutableList;
-    private IntArrayList intArrayList;
-    private LongArrayList longArrayList;
-
-    private UnifiedMap<Integer, Integer> unifiedMap;
-    private ImmutableMap<Integer, Integer> immutableMap;
-    private IntIntHashMap intIntMap;
-    private IntObjectHashMap<Integer> intObjectMap;
-
-    private UnifiedSet<Integer> unifiedSet;
-    private ImmutableSet<Integer> immutableSet;
-    private IntHashSet intHashSet;
-
-    private HashBag<Integer> hashBag;
-    private ImmutableBag<Integer> immutableBag;
-    private int distinctValues;
-
-    @Setup(Level.Trial)
-    public void setup() {
-        fastList = new FastList<>(size);
-        intArrayList = new IntArrayList(size);
-        longArrayList = new LongArrayList(size);
-        for (int i = 0; i < size; i++) {
-            fastList.add(i);
-            intArrayList.add(i);
-            longArrayList.add(i);
-        }
-        immutableList = fastList.toImmutable();
-
-        unifiedMap = new UnifiedMap<>(size * 2);
-        intIntMap = new IntIntHashMap(size * 2);
-        intObjectMap = new IntObjectHashMap<>(size * 2);
-        for (int i = 0; i < size; i++) {
-            int value = i * 3;
-            unifiedMap.put(i, value);
-            intIntMap.put(i, value);
-            intObjectMap.put(i, value);
-        }
-        immutableMap = unifiedMap.toImmutable();
-
-        unifiedSet = new UnifiedSet<>(size * 2);
-        intHashSet = new IntHashSet(size * 2);
-        for (int i = 0; i < size; i++) {
-            unifiedSet.add(i);
-            intHashSet.add(i);
-        }
-        immutableSet = unifiedSet.toImmutable();
-
-        distinctValues = Math.max(1, Math.min(size, 1024));
-        hashBag = new HashBag<>(size);
-        for (int i = 0; i < size; i++) {
-            hashBag.add(i % distinctValues);
-        }
-        immutableBag = hashBag.toImmutable();
-    }
-
     @Benchmark
-    public FastList<Integer> list_insert_fastList() {
+    public void cpu_batch_mutations(Blackhole blackhole) {
         FastList<Integer> list = new FastList<>(size);
-        for (int i = 0; i < size; i++) {
-            list.add(i);
-        }
-        return list;
-    }
-
-    @Benchmark
-    public ImmutableList<Integer> list_insert_immutableList() {
-        FastList<Integer> list = new FastList<>(size);
-        for (int i = 0; i < size; i++) {
-            list.add(i);
-        }
-        return list.toImmutable();
-    }
-
-    @Benchmark
-    public IntArrayList list_insert_intArrayList() {
-        IntArrayList list = new IntArrayList(size);
-        for (int i = 0; i < size; i++) {
-            list.add(i);
-        }
-        return list;
-    }
-
-    @Benchmark
-    public LongArrayList list_insert_longArrayList() {
-        LongArrayList list = new LongArrayList(size);
-        for (long i = 0; i < size; i++) {
-            list.add(i);
-        }
-        return list;
-    }
-
-    @Benchmark
-    public MutableList<Integer> list_delete_fastList_reject() {
-        final int target = size / 2;
-        return fastList.reject(each -> each == target);
-    }
-
-    @Benchmark
-    public ImmutableList<Integer> list_delete_immutableList_reject() {
-        final int target = size / 2;
-        return immutableList.reject(each -> each == target);
-    }
-
-    @Benchmark
-    public MutableIntList list_delete_intArrayList_reject() {
-        final int target = size / 2;
-        return intArrayList.reject(each -> each == target);
-    }
-
-    @Benchmark
-    public MutableLongList list_delete_longArrayList_reject() {
-        final long target = size / 2L;
-        return longArrayList.reject(each -> each == target);
-    }
-
-    @Benchmark
-    public UnifiedMap<Integer, Integer> map_insert_unifiedMap() {
+        IntArrayList primitiveList = new IntArrayList(size);
         UnifiedMap<Integer, Integer> map = new UnifiedMap<>(size * 2);
-        for (int i = 0; i < size; i++) {
-            map.put(i, i * 3);
-        }
-        return map;
-    }
-
-    @Benchmark
-    public ImmutableMap<Integer, Integer> map_insert_immutableMap() {
-        UnifiedMap<Integer, Integer> map = new UnifiedMap<>(size * 2);
-        for (int i = 0; i < size; i++) {
-            map.put(i, i * 3);
-        }
-        return map.toImmutable();
-    }
-
-    @Benchmark
-    public IntIntHashMap map_insert_intIntHashMap() {
-        IntIntHashMap map = new IntIntHashMap(size * 2);
-        for (int i = 0; i < size; i++) {
-            map.put(i, i * 3);
-        }
-        return map;
-    }
-
-    @Benchmark
-    public IntObjectHashMap<Integer> map_insert_intObjectHashMap() {
-        IntObjectHashMap<Integer> map = new IntObjectHashMap<>(size * 2);
-        for (int i = 0; i < size; i++) {
-            map.put(i, i * 3);
-        }
-        return map;
-    }
-
-    @Benchmark
-    public MutableMap<Integer, Integer> map_delete_unifiedMap_reject() {
-        final int target = size / 2;
-        return unifiedMap.reject((key, value) -> key == target);
-    }
-
-    @Benchmark
-    public ImmutableMap<Integer, Integer> map_delete_immutableMap_reject() {
-        final int target = size / 2;
-        return immutableMap.reject((key, value) -> key == target);
-    }
-
-    @Benchmark
-    public MutableIntIntMap map_delete_intIntHashMap_reject() {
-        final int target = size / 2;
-        return intIntMap.reject((key, value) -> key == target);
-    }
-
-    @Benchmark
-    public MutableIntObjectMap<Integer> map_delete_intObjectHashMap_reject() {
-        final int target = size / 2;
-        return intObjectMap.reject((key, value) -> key == target);
-    }
-
-    @Benchmark
-    public UnifiedSet<Integer> set_insert_unifiedSet() {
         UnifiedSet<Integer> set = new UnifiedSet<>(size * 2);
-        for (int i = 0; i < size; i++) {
-            set.add(i);
-        }
-        return set;
-    }
-
-    @Benchmark
-    public ImmutableSet<Integer> set_insert_immutableSet() {
-        UnifiedSet<Integer> set = new UnifiedSet<>(size * 2);
-        for (int i = 0; i < size; i++) {
-            set.add(i);
-        }
-        return set.toImmutable();
-    }
-
-    @Benchmark
-    public IntHashSet set_insert_intHashSet() {
-        IntHashSet set = new IntHashSet(size * 2);
-        for (int i = 0; i < size; i++) {
-            set.add(i);
-        }
-        return set;
-    }
-
-    @Benchmark
-    public MutableSet<Integer> set_delete_unifiedSet_reject() {
-        final int target = size / 2;
-        return unifiedSet.reject(value -> value == target);
-    }
-
-    @Benchmark
-    public ImmutableSet<Integer> set_delete_immutableSet_reject() {
-        final int target = size / 2;
-        return immutableSet.reject(value -> value == target);
-    }
-
-    @Benchmark
-    public MutableIntSet set_delete_intHashSet_reject() {
-        final int target = size / 2;
-        return intHashSet.reject(value -> value == target);
-    }
-
-    @Benchmark
-    public HashBag<Integer> bag_insert_hashBag() {
         HashBag<Integer> bag = new HashBag<>(size);
+        int distinctValues = Math.max(1, Math.min(size, 1024));
+
         for (int i = 0; i < size; i++) {
+            list.add(i);
+            primitiveList.add(i);
+            map.put(i, i * 3);
+            set.add(i);
             bag.add(i % distinctValues);
         }
-        return bag;
-    }
 
-    @Benchmark
-    public ImmutableBag<Integer> bag_insert_immutableBag() {
-        HashBag<Integer> bag = new HashBag<>(size);
-        for (int i = 0; i < size; i++) {
-            bag.add(i % distinctValues);
-        }
-        return bag.toImmutable();
-    }
-
-    @Benchmark
-    public MutableBag<Integer> bag_delete_hashBag_reject() {
-        final int target = distinctValues / 2;
-        return hashBag.reject(value -> value == target);
-    }
-
-    @Benchmark
-    public Object bag_delete_immutableBag_reject() {
-        final int target = distinctValues / 2;
-        return immutableBag.reject(value -> value == target);
+        int target = size / 2;
+        blackhole.consume(list.reject(each -> each == target));
+        blackhole.consume(primitiveList.reject(each -> each == target));
+        blackhole.consume(map.reject((key, value) -> key == target));
+        blackhole.consume(set.reject(value -> value == target));
+        blackhole.consume(bag.reject(value -> value == distinctValues / 2));
     }
 }

@@ -46,16 +46,13 @@ public class MixedBenchmark {
     private ImmutableList<Integer> immutableList;
     private IntArrayList intArrayList;
     private LongArrayList longArrayList;
-
     private UnifiedMap<Integer, Integer> unifiedMap;
     private ImmutableMap<Integer, Integer> immutableMap;
     private IntIntHashMap intIntMap;
     private IntObjectHashMap<Integer> intObjectMap;
-
     private UnifiedSet<Integer> unifiedSet;
     private ImmutableSet<Integer> immutableSet;
     private IntHashSet intHashSet;
-
     private HashBag<Integer> hashBag;
     private ImmutableBag<Integer> immutableBag;
     private int distinctValues;
@@ -100,126 +97,44 @@ public class MixedBenchmark {
     }
 
     @Benchmark
-    public void list_traverse_fastList_forEach(Blackhole blackhole) {
+    public void mixed_batch_traversal(Blackhole blackhole) {
         fastList.forEach((Procedure<Integer>) each -> blackhole.consume(each));
-    }
-
-    @Benchmark
-    public void list_traverse_immutableList_forEach(Blackhole blackhole) {
         immutableList.forEach((Procedure<Integer>) each -> blackhole.consume(each));
-    }
+        blackhole.consume(fastList.injectInto(0L, (long acc, Integer value) -> acc + value));
+        blackhole.consume(immutableList.injectInto(0L, (long acc, Integer value) -> acc + value));
+        blackhole.consume(intArrayList.sum());
+        blackhole.consume(longArrayList.sum());
 
-    @Benchmark
-    public long list_traverse_fastList_injectInto() {
-        return fastList.injectInto(0L, (long acc, Integer value) -> acc + value);
-    }
-
-    @Benchmark
-    public long list_traverse_immutableList_injectInto() {
-        return immutableList.injectInto(0L, (long acc, Integer value) -> acc + value);
-    }
-
-    @Benchmark
-    public long list_traverse_intArrayList_sum() {
-        return intArrayList.sum();
-    }
-
-    @Benchmark
-    public long list_traverse_longArrayList_sum() {
-        return longArrayList.sum();
-    }
-
-    @Benchmark
-    public void map_traverse_unifiedMap_forEachKeyValue(Blackhole blackhole) {
         unifiedMap.forEachKeyValue((key, value) -> {
             blackhole.consume(key);
             blackhole.consume(value);
         });
-    }
-
-    @Benchmark
-    public void map_traverse_immutableMap_forEachKeyValue(Blackhole blackhole) {
         immutableMap.forEachKeyValue((key, value) -> {
             blackhole.consume(key);
             blackhole.consume(value);
         });
-    }
-
-    @Benchmark
-    public void map_traverse_intIntHashMap_forEachKeyValue(Blackhole blackhole) {
         intIntMap.forEachKeyValue((key, value) -> {
             blackhole.consume(key);
             blackhole.consume(value);
         });
-    }
-
-    @Benchmark
-    public void map_traverse_intObjectHashMap_forEachKeyValue(Blackhole blackhole) {
         intObjectMap.forEachKeyValue((key, value) -> {
             blackhole.consume(key);
             blackhole.consume(value);
         });
-    }
+        blackhole.consume(intIntMap.sum());
 
-    @Benchmark
-    public long map_traverse_unifiedMap_valuesSum() {
-        long sum = 0L;
-        for (Integer value : unifiedMap.values()) {
-            sum += value;
-        }
-        return sum;
-    }
-
-    @Benchmark
-    public long map_traverse_intIntHashMap_sum() {
-        return intIntMap.sum();
-    }
-
-    @Benchmark
-    public void set_traverse_unifiedSet_forEach(Blackhole blackhole) {
         unifiedSet.forEach((Procedure<Integer>) each -> blackhole.consume(each));
-    }
-
-    @Benchmark
-    public void set_traverse_immutableSet_forEach(Blackhole blackhole) {
         immutableSet.forEach((Procedure<Integer>) each -> blackhole.consume(each));
-    }
-
-    @Benchmark
-    public void set_traverse_intHashSet_forEach(Blackhole blackhole) {
         intHashSet.forEach((IntProcedure) each -> blackhole.consume(each));
-    }
+        blackhole.consume(unifiedSet.injectInto(0L, (long acc, Integer value) -> acc + value));
+        blackhole.consume(immutableSet.injectInto(0L, (long acc, Integer value) -> acc + value));
+        blackhole.consume(intHashSet.sum());
 
-    @Benchmark
-    public long set_traverse_unifiedSet_injectInto() {
-        return unifiedSet.injectInto(0L, (long acc, Integer value) -> acc + value);
-    }
-
-    @Benchmark
-    public long set_traverse_immutableSet_injectInto() {
-        return immutableSet.injectInto(0L, (long acc, Integer value) -> acc + value);
-    }
-
-    @Benchmark
-    public long set_traverse_intHashSet_sum() {
-        return intHashSet.sum();
-    }
-
-    @Benchmark
-    public void bag_traverse_hashBag_forEach(Blackhole blackhole) {
         hashBag.forEach((Procedure<Integer>) each -> blackhole.consume(each));
-    }
-
-    @Benchmark
-    public void bag_traverse_hashBag_forEachWithOccurrences(Blackhole blackhole) {
         hashBag.forEachWithOccurrences((value, occurrences) -> {
             blackhole.consume(value);
             blackhole.consume(occurrences);
         });
-    }
-
-    @Benchmark
-    public void bag_traverse_immutableBag_forEach(Blackhole blackhole) {
         immutableBag.forEach((Procedure<Integer>) each -> blackhole.consume(each));
     }
 }
